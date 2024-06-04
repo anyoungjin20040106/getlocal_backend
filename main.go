@@ -50,43 +50,46 @@ func main() {
 	cls.AllowOptimisations = false
 	cls.Fit(instances)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		xVal := r.PostFormValue("x")
-		yVal := r.PostFormValue("y")
+		if r.Method == "post" {
+			xVal := r.PostFormValue("x")
+			yVal := r.PostFormValue("y")
 
-		x, err := strconv.ParseFloat(xVal, 64)
-		if err != nil {
-			http.Error(w, "Invalid value for x", http.StatusBadRequest)
-			return
+			x, err := strconv.ParseFloat(xVal, 64)
+			if err != nil {
+				http.Error(w, "Invalid value for x", http.StatusBadRequest)
+				return
+			}
+
+			y, err := strconv.ParseFloat(yVal, 64)
+			if err != nil {
+				http.Error(w, "Invalid value for y", http.StatusBadRequest)
+				return
+			}
+
+			vec := base.NewDenseInstances()
+			ax := base.NewFloatAttribute("x")
+			ay := base.NewFloatAttribute("y")
+			vec.AddAttribute(ax)
+			vec.AddAttribute(ay)
+			axSpec := vec.AddAttribute(ax)
+			aySpec := vec.AddAttribute(ay)
+			vec.AddClassAttribute(base.NewCategoricalAttribute())
+			vec.Extend(1)
+			vec.Set(axSpec, 0, ax.GetSysValFromString(fmt.Sprintf("%f", x)))
+			vec.Set(aySpec, 0, ay.GetSysValFromString(fmt.Sprintf("%f", y)))
+
+			predictions, err := cls.Predict(vec)
+			if err != nil {
+				panic(err)
+			}
+			result := LoacalData{
+				local: predictions.RowString(0),
+			}
+			w.Header().Set("Content-Type", "application/json")
+			json.NewEncoder(w).Encode(result)
+		} else if r.Method == "GET" {
+			http.ServeFile(w, r, "index.html")
 		}
-
-		y, err := strconv.ParseFloat(yVal, 64)
-		if err != nil {
-			http.Error(w, "Invalid value for y", http.StatusBadRequest)
-			return
-		}
-
-		vec := base.NewDenseInstances()
-		ax := base.NewFloatAttribute("x")
-		ay := base.NewFloatAttribute("y")
-		vec.AddAttribute(ax)
-		vec.AddAttribute(ay)
-		axSpec := vec.AddAttribute(ax)
-		aySpec := vec.AddAttribute(ay)
-		vec.AddClassAttribute(base.NewCategoricalAttribute())
-		vec.Extend(1)
-		vec.Set(axSpec, 0, ax.GetSysValFromString(fmt.Sprintf("%f", x)))
-		vec.Set(aySpec, 0, ay.GetSysValFromString(fmt.Sprintf("%f", y)))
-
-		predictions, err := cls.Predict(vec)
-		if err != nil {
-			panic(err)
-		}
-		result := LoacalData{
-			local: predictions.RowString(0),
-		}
-		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
-
 	})
 	http.ListenAndServe(":8000", nil)
 }
