@@ -89,11 +89,17 @@ func main() {
 		if err != nil {
 			http.Error(w, fmt.Sprintf("%s", err), http.StatusBadRequest)
 		}
-		result := LoacalData{
-			local: predictions.RowString(0),
+		local := predictions.RowString(0)
+		if local == "" {
+			fmt.Fprint(w, local)
+			return
 		}
+		result := LoacalData{
+			local: local,
+		}
+
 		w.Header().Set("Content-Type", "application/json")
-		json.NewEncoder(w).Encode(result)
+		json.NewEncoder(w).Encode(fmt.Sprintf("%s", result))
 	})
 	http.ListenAndServe(":8000", nil)
 }
