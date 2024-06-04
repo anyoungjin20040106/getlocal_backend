@@ -80,7 +80,7 @@ func main() {
 
 			predictions, err := cls.Predict(vec)
 			if err != nil {
-				panic(err)
+				http.Error(w, fmt.Sprintf("%s", err), http.StatusBadRequest)
 			}
 			result := LoacalData{
 				local: predictions.RowString(0),
