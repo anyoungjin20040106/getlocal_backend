@@ -50,7 +50,7 @@ func main() {
 	cls.AllowOptimisations = false
 	cls.Fit(instances)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
-		if r.Method == "post" {
+		if r.Method == "POST" {
 			xVal := r.PostFormValue("x")
 			yVal := r.PostFormValue("y")
 
