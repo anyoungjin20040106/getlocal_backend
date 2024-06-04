@@ -50,46 +50,50 @@ func main() {
 	cls.AllowOptimisations = false
 	cls.Fit(instances)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		var x float64
+		var y float64
+		var err error
 		if r.Method == "POST" {
 			xVal := r.PostFormValue("x")
 			yVal := r.PostFormValue("y")
 
-			x, err := strconv.ParseFloat(xVal, 64)
+			x, err = strconv.ParseFloat(xVal, 64)
 			if err != nil {
 				http.Error(w, "Invalid value for x", http.StatusBadRequest)
 				return
 			}
 
-			y, err := strconv.ParseFloat(yVal, 64)
+			y, err = strconv.ParseFloat(yVal, 64)
 			if err != nil {
 				http.Error(w, "Invalid value for y", http.StatusBadRequest)
 				return
 			}
-
-			vec := base.NewDenseInstances()
-			ax := base.NewFloatAttribute("x")
-			ay := base.NewFloatAttribute("y")
-			vec.AddAttribute(ax)
-			vec.AddAttribute(ay)
-			axSpec := vec.AddAttribute(ax)
-			aySpec := vec.AddAttribute(ay)
-			vec.AddClassAttribute(base.NewCategoricalAttribute())
-			vec.Extend(1)
-			vec.Set(axSpec, 0, ax.GetSysValFromString(fmt.Sprintf("%f", x)))
-			vec.Set(aySpec, 0, ay.GetSysValFromString(fmt.Sprintf("%f", y)))
-
-			predictions, err := cls.Predict(vec)
-			if err != nil {
-				http.Error(w, fmt.Sprintf("%s", err), http.StatusBadRequest)
-			}
-			result := LoacalData{
-				local: predictions.RowString(0),
-			}
-			w.Header().Set("Content-Type", "application/json")
-			json.NewEncoder(w).Encode(result)
 		} else if r.Method == "GET" {
-			http.ServeFile(w, r, "index.html")
+			y = 37.811252
+			x = 127.132577
 		}
+
+		vec := base.NewDenseInstances()
+		ax := base.NewFloatAttribute("x")
+		ay := base.NewFloatAttribute("y")
+		vec.AddAttribute(ax)
+		vec.AddAttribute(ay)
+		axSpec := vec.AddAttribute(ax)
+		aySpec := vec.AddAttribute(ay)
+		vec.AddClassAttribute(base.NewCategoricalAttribute())
+		vec.Extend(1)
+		vec.Set(axSpec, 0, ax.GetSysValFromString(fmt.Sprintf("%f", x)))
+		vec.Set(aySpec, 0, ay.GetSysValFromString(fmt.Sprintf("%f", y)))
+
+		predictions, err := cls.Predict(vec)
+		if err != nil {
+			http.Error(w, fmt.Sprintf("%s", err), http.StatusBadRequest)
+		}
+		result := LoacalData{
+			local: predictions.RowString(0),
+		}
+		w.Header().Set("Content-Type", "application/json")
+		json.NewEncoder(w).Encode(result)
 	})
 	http.ListenAndServe(":8000", nil)
 }
